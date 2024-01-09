@@ -169,10 +169,40 @@ vars_to_plot <- c("GPP", "Rleaf", "Bleaf", "Rh")
 
 global_out_to_plot %>% 
   filter(variable %in% vars_to_plot) %>% 
-  # Select only a handful of dates to visualize otherwise it gets to be a lot. 
-  filter(date(time) %in% c("2005-03-21", "2005-03-22", "2005-03-23")) %>% 
+  # Select only a handful of dates to look at.  
+  filter(date(time) %in% c("2007-03-21", "2007-03-22", "2007-03-23")) %>% 
   ggplot() + 
   geom_line(aes(time, Mean)) +
   geom_ribbon(aes(time, ymin = Min, ymax = Max), alpha = 0.5) + 
+  facet_wrap("variable", scales = "free") + 
+  labs(x = NULL, y = NULL)
+
+
+# 4. Local Sensitivity -------------------------------------------------------
+
+local_out <- SEM_sensfunc(pars = pars,
+                          param_df = params_df, 
+                          inputs = met_inputs, 
+                          X = pools, 
+                          DBH = 10) 
+
+summary(local_out)
+pairs(local_out)
+
+# Format the results for easy plotting. 
+local_out %>% 
+  format_sensout() %>% 
+  mutate(time = ymd_hm(time)) -> 
+  local_out_plotting
+
+
+# Select a few variables to look at
+vars_to_plot <- c("GPP", "Rleaf", "Bleaf", "Rh")
+
+local_out_plotting %>% 
+  filter(variable %in% vars_to_plot) %>% 
+  # Select only a handful of dates to visualize otherwise it gets to be a lot. 
+  ggplot() + 
+  geom_line(aes(time, value, color = parameter)) +
   facet_wrap("variable", scales = "free") + 
   labs(x = NULL, y = NULL)
